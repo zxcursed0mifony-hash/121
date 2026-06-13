@@ -8,7 +8,7 @@ import base64
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB для аватарок
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 # ========== ФАЙЛЫ ДЛЯ ХРАНЕНИЯ ==========
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -57,12 +57,6 @@ messages_storage = {}
 user_chats = {}
 last_seen = {}
 
-# Сохраняем данные при завершении
-import atexit
-atexit.register(save_users)
-atexit.register(save_groups)
-atexit.register(save_channels)
-
 HTML_TEMPLATE = '''
 <!DOCTYPE html>
 <html lang="ru">
@@ -80,8 +74,6 @@ HTML_TEMPLATE = '''
             overflow: hidden;
             color: var(--text);
         }
-        
-        /* ТЕМЫ */
         body.dark {
             --bg: #0a0a0a;
             --bg2: #1a1a1a;
@@ -129,8 +121,6 @@ HTML_TEMPLATE = '''
             --accent: #9c27b0;
             --online: #ce93d8;
         }
-        
-        /* АНИМАЦИИ */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -143,8 +133,6 @@ HTML_TEMPLATE = '''
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
-        
-        /* ЛОГИН */
         .login-wrapper {
             position: fixed;
             top: 0;
@@ -200,11 +188,7 @@ HTML_TEMPLATE = '''
         .error-message { color: var(--danger); font-size: 12px; margin-top: 10px; display: none; }
         .switch-auth { margin-top: 15px; color: var(--text2); cursor: pointer; }
         .switch-auth span { color: var(--accent); }
-        
-        /* ОСНОВНОЙ ИНТЕРФЕЙС */
         .chat-app { display: none; height: 100vh; display: flex; }
-        
-        /* ЛЕВАЯ ПАНЕЛЬ */
         .chats-sidebar {
             width: 380px;
             background: var(--bg2);
@@ -253,7 +237,6 @@ HTML_TEMPLATE = '''
         .profile-status { font-size: 11px; color: var(--online); margin-top: 2px; }
         .edit-profile { background: none; border: none; color: var(--text2); font-size: 20px; cursor: pointer; padding: 8px; border-radius: 50%; }
         .edit-profile:hover { background: var(--bg3); }
-        
         .search-section { padding: 12px 16px; border-bottom: 1px solid var(--border); }
         .search-box {
             display: flex;
@@ -277,7 +260,6 @@ HTML_TEMPLATE = '''
             cursor: pointer;
             font-size: 16px;
         }
-        
         .chats-list {
             flex: 1;
             overflow-y: auto;
@@ -337,8 +319,6 @@ HTML_TEMPLATE = '''
             border-radius: 50px;
             margin-top: 4px;
         }
-        
-        /* ПРАВАЯ ПАНЕЛЬ */
         .chat-main {
             flex: 1;
             display: flex;
@@ -380,7 +360,6 @@ HTML_TEMPLATE = '''
             border-radius: 50%;
         }
         .chat-header-actions button:hover { background: var(--bg3); }
-        
         .messages-area {
             flex: 1;
             overflow-y: auto;
@@ -425,7 +404,6 @@ HTML_TEMPLATE = '''
             font-style: italic;
             min-height: 36px;
         }
-        
         .input-area {
             background: var(--bg2);
             padding: 12px 20px;
@@ -457,8 +435,6 @@ HTML_TEMPLATE = '''
             align-items: center;
             justify-content: center;
         }
-        
-        /* ПЛАВАЮЩАЯ КНОПКА */
         .fab {
             position: fixed;
             bottom: 24px;
@@ -476,7 +452,6 @@ HTML_TEMPLATE = '''
         }
         .fab i { font-size: 24px; color: white; }
         .fab.hide { display: none; }
-        
         .fab-menu {
             position: fixed;
             bottom: 90px;
@@ -500,8 +475,6 @@ HTML_TEMPLATE = '''
         }
         .fab-menu-item:hover { background: var(--bg3); }
         .fab-menu-item i { width: 24px; font-size: 18px; color: var(--accent); }
-        
-        /* МОДАЛКИ */
         .modal {
             position: fixed;
             top: 0;
@@ -548,7 +521,6 @@ HTML_TEMPLATE = '''
         }
         .modal-footer .save { background: var(--accent); color: white; }
         .modal-footer .cancel { background: var(--bg3); color: var(--text); }
-        
         .settings-item {
             padding: 14px 0;
             border-bottom: 1px solid var(--border);
@@ -565,7 +537,6 @@ HTML_TEMPLATE = '''
             border: 1px solid var(--border);
         }
         .theme-option.selected { border-color: var(--accent); background: var(--bg3); }
-        
         .user-search-result {
             padding: 12px;
             margin: 8px 0;
@@ -577,7 +548,6 @@ HTML_TEMPLATE = '''
             cursor: pointer;
         }
         .user-not-found { text-align: center; padding: 20px; color: var(--text2); }
-        
         .notification {
             position: fixed;
             bottom: 20px;
@@ -590,7 +560,6 @@ HTML_TEMPLATE = '''
             z-index: 1500;
             animation: notificationSlide 0.3s ease;
         }
-        
         .avatar-preview {
             width: 100px;
             height: 100px;
@@ -600,7 +569,6 @@ HTML_TEMPLATE = '''
             background-position: center;
             box-shadow: 0 0 0 3px var(--accent);
         }
-        
         @media (max-width: 768px) {
             .chats-sidebar {
                 position: fixed;
@@ -615,7 +583,6 @@ HTML_TEMPLATE = '''
             .message { max-width: 85%; }
             .mobile-menu-btn { display: block; }
         }
-        
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: var(--bg3); }
         ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
@@ -634,7 +601,6 @@ HTML_TEMPLATE = '''
             <div class="switch-auth" id="switchAuthBtn">Нет аккаунта? <span>Зарегистрироваться</span></div>
         </div>
     </div>
-    
     <div class="chat-app" id="chatApp">
         <div class="chats-sidebar" id="chatsSidebar">
             <div class="profile-header" id="profileBtn">
@@ -654,7 +620,6 @@ HTML_TEMPLATE = '''
             </div>
             <div class="chats-list" id="chatsList"></div>
         </div>
-        
         <div class="chat-main">
             <div class="chat-header">
                 <button id="mobileMenuBtn" class="mobile-menu-btn" style="display: none; background: none; border: none; color: var(--text2); font-size: 24px; cursor: pointer;">☰</button>
@@ -670,20 +635,16 @@ HTML_TEMPLATE = '''
                     <button id="deleteChatBtn" title="Удалить">🗑️</button>
                 </div>
             </div>
-            
             <div class="messages-area" id="messagesArea">
                 <div style="text-align: center; color: var(--text2); margin-top: 40px;">✨ Выберите чат из списка слева</div>
             </div>
-            
             <div class="typing-indicator" id="typingIndicator"></div>
-            
             <div class="input-area" id="inputArea" style="display: none;">
                 <input type="text" class="message-input" id="messageInput" placeholder="Сообщение...">
                 <button class="send-btn" id="sendBtn">📤</button>
             </div>
         </div>
     </div>
-    
     <div class="fab" id="fabBtn">
         <i class="fas fa-plus"></i>
     </div>
@@ -693,7 +654,6 @@ HTML_TEMPLATE = '''
         <div class="fab-menu-item" id="newChannelBtn"><i class="fas fa-broadcast-tower"></i><span>Создать канал</span></div>
         <div class="fab-menu-item" id="globalSearchMenuItem"><i class="fas fa-globe"></i><span>Глобальный поиск</span></div>
     </div>
-    
     <div class="modal" id="profileModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -720,7 +680,6 @@ HTML_TEMPLATE = '''
             </div>
         </div>
     </div>
-    
     <div class="modal" id="settingsModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -733,7 +692,6 @@ HTML_TEMPLATE = '''
             </div>
         </div>
     </div>
-    
     <div class="modal" id="themeModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -743,7 +701,6 @@ HTML_TEMPLATE = '''
             <div class="modal-body" id="themeList"></div>
         </div>
     </div>
-    
     <div class="modal" id="newChatModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -753,7 +710,6 @@ HTML_TEMPLATE = '''
             <div class="modal-body" id="newModalBody"></div>
         </div>
     </div>
-    
     <div class="modal" id="globalSearchModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -766,7 +722,6 @@ HTML_TEMPLATE = '''
             </div>
         </div>
     </div>
-    
     <script>
         let currentUser = '';
         let currentChat = null;
@@ -779,7 +734,6 @@ HTML_TEMPLATE = '''
         let messagesData = {};
         let pollingInterval;
         
-        // DOM элементы
         const loginWrapper = document.getElementById('loginWrapper');
         const chatApp = document.getElementById('chatApp');
         const loginUsername = document.getElementById('loginUsername');
@@ -1038,7 +992,12 @@ HTML_TEMPLATE = '''
             chatsList = chatsData.chats || [];
             groupsList = groupsData.groups || [];
             channelsList = channelsData.channels || [];
-            messagesData = messagesDataRes.messages || {};
+            
+            // Обновляем сообщения
+            for (const [chatId, msgs] of Object.entries(messagesDataRes.messages || {})) {
+                messagesData[chatId] = msgs;
+            }
+            
             renderChatsList();
             if (currentChat && messagesData[currentChat]) {
                 renderMessages(messagesData[currentChat]);
@@ -1050,41 +1009,44 @@ HTML_TEMPLATE = '''
             let allChats = [];
             
             chatsList.forEach(chat => {
+                const lastMsg = messagesData[chat.name]?.slice(-1)[0];
                 allChats.push({
                     id: chat.name,
                     type: 'private',
                     name: chat.first_name || chat.name,
                     username: '@' + (chat.username || chat.name),
                     avatar: chat.avatar || chat.name.charAt(0).toUpperCase(),
-                    last_message: chat.last_message,
-                    last_time: chat.last_time,
-                    unread: chat.unread || 0,
+                    last_message: lastMsg?.message || '',
+                    last_time: lastMsg?.time || '',
+                    unread: 0,
                     online: chat.online
                 });
             });
             
             groupsList.forEach(group => {
+                const lastMsg = messagesData[group.id]?.slice(-1)[0];
                 allChats.push({
                     id: group.id,
                     type: 'group',
                     name: group.name,
                     username: group.description || 'Группа',
                     avatar: '👥',
-                    last_message: group.last_message,
-                    last_time: group.last_time,
+                    last_message: lastMsg?.message || '',
+                    last_time: lastMsg?.time || '',
                     unread: 0
                 });
             });
             
             channelsList.forEach(channel => {
+                const lastMsg = messagesData[channel.id]?.slice(-1)[0];
                 allChats.push({
                     id: channel.id,
                     type: 'channel',
                     name: channel.name,
                     username: channel.description || 'Канал',
                     avatar: '📢',
-                    last_message: channel.last_message,
-                    last_time: channel.last_time,
+                    last_message: lastMsg?.message || '',
+                    last_time: lastMsg?.time || '',
                     unread: 0
                 });
             });
@@ -1180,6 +1142,8 @@ HTML_TEMPLATE = '''
                 body: JSON.stringify({ to: currentChat, type: currentChatType, message: msg })
             });
             messageInput.value = '';
+            // Ждём 0.5 сек и обновляем данные
+            setTimeout(() => loadData(), 500);
         }
         
         messageInput.addEventListener('keypress', (e) => {
@@ -1360,7 +1324,6 @@ HTML_TEMPLATE = '''
 </html>
 '''
 
-# ========== МАРШРУТЫ ==========
 @app.route('/')
 def index():
     return render_template_string(HTML_TEMPLATE)
@@ -1454,7 +1417,6 @@ def upload_avatar():
     if file.filename == '':
         return {'success': False, 'error': 'Файл не выбран'}
     
-    # Сохраняем как base64 для простоты (на Render нельзя сохранять файлы)
     file_data = base64.b64encode(file.read()).decode('utf-8')
     mime = file.mimetype
     avatar_data = f"data:{mime};base64,{file_data}"
