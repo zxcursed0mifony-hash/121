@@ -1,67 +1,3 @@
-{
-  "123123": {
-    "sid": "2QpjShDGy8wXtMS6AAAB",
-    "password": "4703c87af014ed7a486de7ce17573985",
-    "first_name": "123123",
-    "last_name": "",
-    "avatar": "1",
-    "status": "⚫ Офлайн",
-    "bio": "",
-    "phone": "",
-    "settings": {
-      "theme": "dark",
-      "notifications": true
-    },
-    "contacts": [],
-    "blocked": [],
-    "archived": [],
-    "groups": [],
-    "channels": [],
-    "last_seen": "03:58"
-  },
-  "123123ji": {
-    "sid": null,
-    "password": "64614ec8368cb63e6c050817b3f54819",
-    "first_name": "123123ji",
-    "last_name": "",
-    "avatar": "1",
-    "status": "🟢 Онлайн",
-    "bio": "",
-    "phone": "",
-    "settings": {
-      "theme": "dark",
-      "notifications": true
-    },
-    "contacts": [],
-    "blocked": [],
-    "archived": [],
-    "groups": [],
-    "channels": [],
-    "last_seen": "03:52"
-  },
-  "123123ji1": {
-    "sid": "ivPGAlko2roCVm6AAAAD",
-    "password": "2a29e197400f55dc4db300bcdeddbbad",
-    "first_name": "123123ji1",
-    "last_name": "",
-    "avatar": "1",
-    "status": "🟢 Онлайн",
-    "bio": "",
-    "phone": "",
-    "settings": {
-      "theme": "dark",
-      "notifications": true
-    },
-    "contacts": [],
-    "blocked": [],
-    "archived": [],
-    "groups": [
-      "group_a93d3024"
-    ],
-    "channels": [],
-    "last_seen": "04:06"
-  }
-}
 from flask import Flask, render_template_string, request
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from datetime import datetime
@@ -1847,8 +1783,3 @@ if __name__ == '__main__':
     print('   • ESC — закрыть текущий чат')
     print('=' * 60)
     socketio.run(app, host='0.0.0.0', port=5000, debug=True)
-Flask>=2.0.0
-flask-socketio>=5.0.0
-python-engineio>=4.0.0
-python-socketio>=5.0.0
-eventlet>=0.33.0
