@@ -505,7 +505,6 @@ HTML_TEMPLATE = '''
             inputArea.style.display = 'flex';
             messageInput.disabled = false;
             messagesArea.innerHTML = '';
-            // Здесь будет загрузка истории
         }
         
         function sendMessage() {
@@ -556,6 +555,11 @@ HTML_TEMPLATE = '''
 </body>
 </html>
 '''
+
+# ========== МАРШРУТЫ ==========
+@app.route('/')
+def index():
+    return render_template_string(HTML_TEMPLATE)
 
 # ========== СОКЕТ-СОБЫТИЯ ==========
 @socketio.on('login')
@@ -629,10 +633,8 @@ def handle_send_message(data):
 @socketio.on('disconnect')
 def handle_disconnect():
     username = user_sessions.pop(request.sid, None)
-    @app.route('/')
-def index():
-    return render_template_string(HTML_TEMPLATE)
 
+# ========== ЗАПУСК ==========
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     socketio.run(app, host='0.0.0.0', port=port)
