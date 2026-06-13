@@ -24,13 +24,7 @@ def load_users():
                     if len(parts) >= 2:
                         username = parts[0]
                         password = parts[1]
-                        users[username] = {
-                            'password': password,
-                            'first_name': username,
-                            'last_name': '',
-                            'avatar': username[0].upper(),
-                            'status': '🟢 Онлайн'
-                        }
+                        users[username] = password
     return users
 
 def save_user(username, password):
@@ -39,7 +33,6 @@ def save_user(username, password):
 
 users = load_users()
 user_sessions = {}
-messages = {}
 
 HTML_TEMPLATE = '''
 <!DOCTYPE html>
@@ -136,7 +129,6 @@ HTML_TEMPLATE = '''
             align-items: center;
             gap: 12px;
             border-bottom: 1px solid #2a2a2a;
-            cursor: pointer;
         }
         .profile-avatar {
             width: 48px;
@@ -348,7 +340,6 @@ HTML_TEMPLATE = '''
         
         <div class="chat-main">
             <div class="chat-header">
-                <button id="mobileMenuBtn" style="display: none; background: none; border: none; color: #888; font-size: 24px;">☰</button>
                 <div class="chat-header-avatar" id="chatAvatar">💬</div>
                 <div class="chat-header-info">
                     <div class="chat-header-name" id="chatName">ShadowChat</div>
@@ -394,7 +385,6 @@ HTML_TEMPLATE = '''
         const chatAvatar = document.getElementById('chatAvatar');
         const inputArea = document.getElementById('inputArea');
         const fabBtn = document.getElementById('fabBtn');
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         
         let isLoginMode = true;
         
@@ -465,14 +455,8 @@ HTML_TEMPLATE = '''
         });
         
         socket.on('users_list', (data) => {
-            allUsers = data.users;
+            allUsers = data.users.filter(u => u !== currentUser);
             renderChatsList();
-        });
-        
-        socket.on('new_message', (data) => {
-            if (data.chat_id === currentChat) {
-                addMessageToChat(data, data.from === currentUser);
-            }
         });
         
         function loadUsers() {
@@ -482,19 +466,17 @@ HTML_TEMPLATE = '''
         function renderChatsList() {
             chatsListEl.innerHTML = '';
             allUsers.forEach(user => {
-                if (user !== currentUser) {
-                    const div = document.createElement('div');
-                    div.className = 'chat-item';
-                    div.innerHTML = `
-                        <div class="chat-avatar">${user.charAt(0).toUpperCase()}</div>
-                        <div class="chat-info">
-                            <div class="chat-name">${escapeHtml(user)}</div>
-                            <div class="chat-last-message">Нажмите для чата</div>
-                        </div>
-                    `;
-                    div.onclick = () => openChat(user);
-                    chatsListEl.appendChild(div);
-                }
+                const div = document.createElement('div');
+                div.className = 'chat-item';
+                div.innerHTML = `
+                    <div class="chat-avatar">${user.charAt(0).toUpperCase()}</div>
+                    <div class="chat-info">
+                        <div class="chat-name">${escapeHtml(user)}</div>
+                        <div class="chat-last-message">Нажмите для чата</div>
+                    </div>
+                `;
+                div.onclick = () => openChat(user);
+                chatsListEl.appendChild(div);
             });
         }
         
@@ -514,6 +496,12 @@ HTML_TEMPLATE = '''
             addMessageToChat({ from: currentUser, message: msg, time: new Date().toLocaleTimeString() }, true);
             messageInput.value = '';
         }
+        
+        socket.on('new_message', (data) => {
+            if (data.from === currentChat) {
+                addMessageToChat(data, data.from === currentUser);
+            }
+        });
         
         function addMessageToChat(msg, isOwn) {
             const div = document.createElement('div');
@@ -543,14 +531,6 @@ HTML_TEMPLATE = '''
         });
         
         sendBtn.onclick = sendMessage;
-        
-        mobileMenuBtn.onclick = () => {
-            document.getElementById('chatsSidebar').classList.toggle('open');
-        };
-        
-        if (window.innerWidth <= 768) {
-            mobileMenuBtn.style.display = 'block';
-        }
     </script>
 </body>
 </html>
@@ -571,7 +551,7 @@ def handle_login(data):
         emit('auth_error', {'error': 'Пользователь не найден'})
         return
     
-    if users[username]['password'] != hashlib.md5(password.encode()).hexdigest():
+    if users[username] != hashlib.md5(password.encode()).hexdigest():
         emit('auth_error', {'error': 'Неверный пароль'})
         return
     
@@ -594,13 +574,7 @@ def handle_register(data):
         return
     
     password_hash = hashlib.md5(password.encode()).hexdigest()
-    users[username] = {
-        'password': password_hash,
-        'first_name': username,
-        'last_name': '',
-        'avatar': username[0].upper(),
-        'status': '🟢 Онлайн'
-    }
+    users[username] = password_hash
     save_user(username, password_hash)
     emit('register_success', {'username': username})
 
@@ -620,15 +594,12 @@ def handle_send_message(data):
     to_user = data['to']
     msg_data = {
         'from': username,
-        'to': to_user,
         'message': data['message'],
-        'time': datetime.now().strftime('%H:%M'),
-        'chat_id': to_user
+        'time': datetime.now().strftime('%H:%M')
     }
     
     if to_user in user_sessions:
         emit('new_message', msg_data, room=user_sessions[to_user])
-    emit('new_message', msg_data, room=request.sid)
 
 @socketio.on('disconnect')
 def handle_disconnect():
